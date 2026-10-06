@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Teachable Machine Audio Test</title>
+</head>
+<body>
+  <h1>Teachable Machine 音声認識テスト</h1>
+  <button type="button" onclick="init()">マイクを開始</button>
+  <audio id="myAudio" src="BGM/01.mp3"></audio>
+  <button onclick="playSound()">音を鳴らす</button>
+  <button onclick="stopSound()">音を止める</button>
+  <div id="label-container"></div>
+
+  <!-- TensorFlow.js と Speech Commands ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+
+  <script>
+    // ★ご自身で出力したTeachable MachineのURLに置き換えてください（末尾の / を忘れないようにしてください）
+    const URL = "https://teachablemachine.withgoogle.com/models/aqDpEu0a3/";
+
+    let recognizer;
+    let scores = [];
+
+    async function createModel() {
+      const checkpointURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      const recognizer = speechCommands.create(
+        "BROWSER_FFT",
+        undefined,
+        checkpointURL,
+        metadataURL
+      );
+
+      await recognizer.ensureModelLoaded();
+      return recognizer;
+    }
+
+    async function init() {
+      recognizer = await createModel();
+      const classLabels = recognizer.wordLabels(); // 学習したクラス名の一覧を取得
+      const labelContainer = document.getElementById("label-container");
+      
+      for (let i = 0; i < classLabels.length; i++) {
+        labelContainer.appendChild(document.createElement("div"));
+      }
+
+      // リアルタイム認識（ listen ）の開始
+      recognizer.listen(result => {
+        scores = result.scores;
+        for (let i = 0; i < classLabels.length; i++) {
+          const classPrediction = classLabels[i] + ": " + scores[i].toFixed(2);
+          labelContainer.childNodes[i].innerHTML = classPrediction;
+          if(scores[2] > 0.75){
+            console.log("音声認識成功");
+            document.getElementById("myAudio").play();
+          }
+          else{
+            document.getElementById("myAudio").pause();
+            document.getElementById("myAudio").currentTime = 0;
+          }
+        }
+      }, {
+        includeSpectrogram: true,
+        probabilityThreshold: 0.75, // 判定のしきい値（0.75以上で反応）
+        invokeCallbackOnNoiseAndUnknown: true,
+        overlapFactor: 0.50
+      });
+    }
+    function playSound() {
+      document.getElementById("myAudio").play();
+    }
+    function stopSound() {
+      document.getElementById("myAudio").pause();
+      document.getElementById("myAudio").currentTime = 0;
+    }
+  </script>
+</body>
+</html>
