@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+</html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品在庫一覧</title>
+</head>
+<body>
+    <h1>在庫一覧</h1>
+
+    
+    <table border="1">
+        <thead>
+            <tr>
+            <th>商品</th>
+            <th>カテゴリー</th>
+            <th>在庫数</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        $products = [
+        ["name"=>"カフェラテ", "category"=>"ドリンク", "stock"=>50],
+        ["name"=>"ランチA", "category"=>"ランチ", "stock"=>5],
+        ["name"=>"チーズケーキ", "category"=>"デザート", "stock"=>30],
+        ];
+    
+        for ($i = 0; $i <= 2; $i++) {
+            //echo $i, ",", $sum, "<br>";
+            echo "<tr>";
+            echo "<td>{$products[$i]["name"]}</td>";
+            echo "<td>{$products[$i]["category"]}</td>";
+            echo "<td>{$products[$i]["stock"]}</td>";
+            //echo "<td>" . $i * $i . "</td>";
+            //echo "<td>{$products}</td>";
+            echo "</tr>";
+        }
+        ?>
+        </tbody>
+    </table>
+</body>
+</html>
+
