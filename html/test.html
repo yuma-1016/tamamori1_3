@@ -7,12 +7,12 @@
 <body>
   <h1>Teachable Machine 音声認識テスト</h1>
   <button type="button" onclick="init()">マイクを開始</button>
-  <audio id="Audio1" src="audio/01.mp3"></audio>
-  <audio id="Audio2" src="audio/02.mp3"></audio>
-  <audio id="Audio3" src="audio/03.mp3"></audio>
-  <audio id="Audio4" src="audio/04.mp3"></audio>
-  <audio id="Audio5" src="audio/05.mp3"></audio>
-  <audio id="Audio6" src="audio/06.mp3"></audio>
+  <audio id="Audio1" src="../audio/01.mp3"></audio>
+  <audio id="Audio2" src="../audio/02.mp3"></audio>
+  <audio id="Audio3" src="../audio/03.mp3"></audio>
+  <audio id="Audio4" src="../audio/04.mp3"></audio>
+  <audio id="Audio5" src="../audio/05.mp3"></audio>
+  <audio id="Audio6" src="../audio/06.mp3"></audio>
   <div id="label-container"></div>
 
   <!-- TensorFlow.js と Speech Commands ライブラリ -->
@@ -26,7 +26,14 @@
     let recognizer;
     let scores = [];
 
-    const currentAudio = ['Audio1', 'Auido2', 'Auido3', 'Auido4', 'Auido5', 'Auido6'];
+    const currentAudio = {
+      0 : 'Audio1',
+      1 : 'Audio2',
+      2 : 'Audio3',
+      3 : 'Audio4',
+      4 : 'Audio5',
+      5 : 'Audio6'
+     }; 
     let currentPlayingIndex = -1;
 
     async function createModel() {
