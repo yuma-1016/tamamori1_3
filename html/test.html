@@ -10,6 +10,9 @@
   <audio id="Audio1" src="audio/01.mp3"></audio>
   <audio id="Audio2" src="audio/02.mp3"></audio>
   <audio id="Audio3" src="audio/03.mp3"></audio>
+  <audio id="Audio4" src="audio/04.mp3"></audio>
+  <audio id="Audio5" src="audio/05.mp3"></audio>
+  <audio id="Audio6" src="audio/06.mp3"></audio>
   <div id="label-container"></div>
 
   <!-- TensorFlow.js と Speech Commands ライブラリ -->
@@ -23,7 +26,8 @@
     let recognizer;
     let scores = [];
 
-    const currentAudio = ['Audio1', 'Auido2', 'Auido3'];
+    const currentAudio = ['Audio1', 'Auido2', 'Auido3', 'Auido4', 'Auido5', 'Auido6'];
+    let currentPlayingIndex = -1;
 
     async function createModel() {
       const checkpointURL = URL + "model.json";
@@ -49,19 +53,12 @@
         labelContainer.appendChild(document.createElement("div"));
       }
 
-      // リアルタイム認識（ listen ）の開始
+      // リアルタイム認識開始
       recognizer.listen(result => {
         scores = result.scores;
         for (let i = 0; i < classLabels.length; i++) {
           const classPrediction = classLabels[i] + ": " + scores[i].toFixed(2);
           labelContainer.childNodes[i].innerHTML = classPrediction;
-          if(scores[i] > 0.75){
-            console.log("音声認識成功");
-            playSound(i);
-          }
-          else{
-            stopSound(i);
-          }
         }
       }, {
         includeSpectrogram: true,
@@ -69,7 +66,26 @@
         invokeCallbackOnNoiseAndUnknown: true,
         overlapFactor: 0.50
       });
+      let maxScore = 0;
+      let maxIndex = 0;
+      for(let i = 0; i < classLabels.length; i++){
+        if(scores[i] > maxScore){
+          maxScore = scores[i];
+          maxIndex = i;
+        }
+      }
+
+      if(maxIndex !== currentPlayingIndex){
+        for(let key in currentAudio){
+          stopSound(key);
+        }
+        if(currentAudio[maxIndex]){
+          playSound(maxIndex);
+        }
+        currentPlayingIndex = maxIndex;
+      }
     }
+
     function playSound(currentindex) {
       document.getElementById(currentAudio[currentindex]).play();
     }
