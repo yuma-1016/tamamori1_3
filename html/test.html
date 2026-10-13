@@ -7,9 +7,9 @@
 <body>
   <h1>Teachable Machine 音声認識テスト</h1>
   <button type="button" onclick="init()">マイクを開始</button>
-  <audio id="myAudio" src="audio/01.mp3"></audio>
-  <button onclick="playSound()">音を鳴らす</button>
-  <button onclick="stopSound()">音を止める</button>
+  <audio id="Audio1" src="audio/01.mp3"></audio>
+  <audio id="Audio2" src="audio/02.mp3"></audio>
+  <audio id="Audio3" src="audio/03.mp3"></audio>
   <div id="label-container"></div>
 
   <!-- TensorFlow.js と Speech Commands ライブラリ -->
@@ -17,11 +17,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
 
   <script>
-    // ★ご自身で出力したTeachable MachineのURLに置き換えてください（末尾の / を忘れないようにしてください）
-    const URL = "https://teachablemachine.withgoogle.com/models/aqDpEu0a3/";
+    // 出力したTeachable MachineのURL
+    const URL = "https://teachablemachine.withgoogle.com/models/gCFPnk_3A/";
 
     let recognizer;
     let scores = [];
+
+    const currentAudio = ['Audio1', 'Auido2', 'Auido3'];
 
     async function createModel() {
       const checkpointURL = URL + "model.json";
@@ -53,13 +55,12 @@
         for (let i = 0; i < classLabels.length; i++) {
           const classPrediction = classLabels[i] + ": " + scores[i].toFixed(2);
           labelContainer.childNodes[i].innerHTML = classPrediction;
-          if(scores[2] > 0.75){
+          if(scores[i] > 0.75){
             console.log("音声認識成功");
-            document.getElementById("myAudio").play();
+            playSound(i);
           }
           else{
-            document.getElementById("myAudio").pause();
-            document.getElementById("myAudio").currentTime = 0;
+            stopSound(i);
           }
         }
       }, {
@@ -69,12 +70,12 @@
         overlapFactor: 0.50
       });
     }
-    function playSound() {
-      document.getElementById("myAudio").play();
+    function playSound(currentindex) {
+      document.getElementById(currentAudio[currentindex]).play();
     }
-    function stopSound() {
-      document.getElementById("myAudio").pause();
-      document.getElementById("myAudio").currentTime = 0;
+    function stopSound(currentindex) {
+      document.getElementById(currentAudio[currentindex]).pause();
+      document.getElementById(currentAudio[currentindex]).currentTime = 0;
     }
   </script>
 </body>
