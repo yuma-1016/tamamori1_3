@@ -742,13 +742,13 @@ function updateListeningUI(active) {
   if (active) {
     btn.className = 'px-5 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-semibold shadow-lg shadow-rose-500/25 active:scale-95 transition-all flex items-center gap-2';
     icon.className = 'ph-bold ph-stop';
-    text.textContent = '監視を停止';
+    text.textContent = 'ストップ';
     badgeDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
     badgeText.textContent = 'マイク: 監視中';
   } else {
     btn.className = 'px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold shadow-lg shadow-teal-500/25 active:scale-95 transition-all flex items-center gap-2';
     icon.className = 'ph-bold ph-play';
-    text.textContent = '監視を開始する';
+    text.textContent = 'スタート';
     badgeDot.className = 'w-2 h-2 rounded-full bg-slate-500';
     badgeText.textContent = 'マイク: 停止中';
   }
