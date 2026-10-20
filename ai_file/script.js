@@ -8,7 +8,7 @@ let micStream = null;
 let micSourceNode = null;
 let animFrameId = null;
 
-// Teachable Machine Recognizer State
+// Recognizer State
 let recognizer = null;
 let isListening = false;
 let isCustomModelLoaded = false;
@@ -24,18 +24,17 @@ let classThemeMapping = {
 };
 
 // User settings
-let thresholdRatio = 0.70;
 let crossfadeDuration = 2.5; // seconds
 let holdDuration = 6.0; // seconds
 let masterVolumeRatio = 0.50;
 
 // Active Theme & Masking Tracker
-let currentThemeKey = 'mute'; // 'lofi' | 'piano' | 'meditation' | 'zen' | 'mute'
+let currentThemeKey = 'mute';
 let holdTimer = null;
 let holdSecondsRemaining = 0;
 let activeDetectedNoiseName = 'なし';
 
-// Theme Meta Definition (colors, descriptions, icons)
+// Theme Meta Definition
 const THEME_META = {
   'mute': {
     name: '静穏 (Muted)',
@@ -43,7 +42,7 @@ const THEME_META = {
     color: '#64748b',
     badgeBg: 'rgba(100, 116, 139, 0.15)',
     badgeText: '#cbd5e1',
-    desc: '雑音は検知されていません。部屋が静かな状態です。'
+    desc: '環境音は静穏状態またはバックグラウンドと判定されています。'
   },
   'lofi': {
     name: 'Warm Lo-Fi Chill',
@@ -51,7 +50,7 @@ const THEME_META = {
     color: '#f59e0b',
     badgeBg: 'rgba(245, 158, 11, 0.15)',
     badgeText: '#fcd34d',
-    desc: 'エレクトリックピアノの甘い和音とアナログテープノイズによる温かなマスキング。'
+    desc: 'エレクトリックピアノの和音とアナログテープノイズによる温かなマスキング。'
   },
   'piano': {
     name: 'Ambient Piano & Soft Harp',
@@ -75,12 +74,12 @@ const THEME_META = {
     color: '#10b981',
     badgeBg: 'rgba(16, 185, 129, 0.15)',
     badgeText: '#6ee7b7',
-    desc: '自然界のホワイトノイズに寄り添う、穏やかな風鈴と温もりのあるアンビエントパッド。'
+    desc: '自然界のアンビエントに寄り添う、穏やかな風鈴と温もりのあるパッド。'
   }
 };
 
 /* =========================================================================
-   2. PROCEDURAL SOUND GENERATORS (Web Audio API Synthesizers)
+   2. PROCEDURAL SOUND GENERATORS
    ========================================================================= */
 const soundNodes = {
   lofi: { gainNode: null, activeNodes: [], customAudio: null },
@@ -98,12 +97,10 @@ function initAudioEngine() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   audioCtx = new AudioContextClass();
 
-  // Master Gain
   masterGainNode = audioCtx.createGain();
   masterGainNode.gain.setValueAtTime(masterVolumeRatio, audioCtx.currentTime);
   masterGainNode.connect(audioCtx.destination);
 
-  // Create individual theme gain buses
   ['lofi', 'piano', 'meditation', 'zen'].forEach(theme => {
     const themeGain = audioCtx.createGain();
     themeGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
@@ -111,25 +108,20 @@ function initAudioEngine() {
     soundNodes[theme].gainNode = themeGain;
   });
 
-  // Start the 4 background procedural generation tracks
   setupLoFiSynth(soundNodes.lofi.gainNode);
   setupPianoEngine(soundNodes.piano.gainNode);
   setupMeditationSynth(soundNodes.meditation.gainNode);
   setupZenEngine(soundNodes.zen.gainNode);
 }
 
-// THEME 1: Warm Lo-Fi Chill (Rhodes Chord Progression + Vinyl Crackle)
 function setupLoFiSynth(outputNode) {
   const now = audioCtx.currentTime;
-
-  // 1. Vinyl tape crackle & low murmur
   const bufferSize = audioCtx.sampleRate * 2;
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const output = noiseBuffer.getChannelData(0);
   let lastOut = 0.0;
   for (let i = 0; i < bufferSize; i++) {
     const white = Math.random() * 2 - 1;
-    // Brown noise + random crackle spikes
     lastOut = (lastOut + (0.02 * white)) / 1.02;
     const crackle = Math.random() > 0.997 ? (Math.random() * 0.4 - 0.2) : 0;
     output[i] = (lastOut * 0.8) + crackle;
@@ -141,7 +133,6 @@ function setupLoFiSynth(outputNode) {
   const vinylFilter = audioCtx.createBiquadFilter();
   vinylFilter.type = 'bandpass';
   vinylFilter.frequency.setValueAtTime(1200, now);
-  vinylFilter.Q.setValueAtTime(0.8, now);
 
   const vinylGain = audioCtx.createGain();
   vinylGain.gain.setValueAtTime(0.06, now);
@@ -152,12 +143,11 @@ function setupLoFiSynth(outputNode) {
   vinylSource.start();
   soundNodes.lofi.activeNodes.push(vinylSource);
 
-  // 2. Warm Electric Piano chords (Cmaj9 - Am7 progression loop)
   const chordNotes = [
-    [130.81, 196.00, 246.94, 293.66], // C, G, B, D
-    [110.00, 164.81, 220.00, 261.63], // A, E, A, C
-    [146.83, 220.00, 261.63, 329.63], // D, A, C, E
-    [98.00, 146.83, 196.00, 246.94]   // G, D, G, B
+    [130.81, 196.00, 246.94, 293.66],
+    [110.00, 164.81, 220.00, 261.63],
+    [146.83, 220.00, 261.63, 329.63],
+    [98.00, 146.83, 196.00, 246.94]
   ];
 
   chordNotes[0].forEach((freq, idx) => {
@@ -166,7 +156,6 @@ function setupLoFiSynth(outputNode) {
     osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
     osc.frequency.setValueAtTime(freq, now);
 
-    // Slow vibrato
     const vib = audioCtx.createOscillator();
     const vibGain = audioCtx.createGain();
     vib.frequency.setValueAtTime(4.2, now);
@@ -182,12 +171,8 @@ function setupLoFiSynth(outputNode) {
   });
 }
 
-// THEME 2: Ambient Calm Piano & Soft Harp (Gentle Pentatonic Arpeggiator)
 function setupPianoEngine(outputNode) {
-  // Pentatonic Scale in Eb major: Eb4, F4, G4, Bb4, C5, Eb5
   const scale = [311.13, 349.23, 392.00, 466.16, 523.25, 622.25];
-
-  // Reverb-like feedback delay for dreamy harp tail
   const delay = audioCtx.createDelay();
   delay.delayTime.setValueAtTime(0.45, audioCtx.currentTime);
   const delayFeedback = audioCtx.createGain();
@@ -196,7 +181,6 @@ function setupPianoEngine(outputNode) {
   delayFeedback.connect(delay);
   delay.connect(outputNode);
 
-  // Generative harp note trigger
   soundNodes.piano.interval = setInterval(() => {
     if (!audioCtx || soundNodes.piano.gainNode.gain.value < 0.01) return;
     const now = audioCtx.currentTime;
@@ -207,7 +191,6 @@ function setupPianoEngine(outputNode) {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
 
-    // Gentle pluck envelope
     noteGain.gain.setValueAtTime(0.0001, now);
     noteGain.gain.linearRampToValueAtTime(0.09, now + 0.05);
     noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
@@ -221,11 +204,8 @@ function setupPianoEngine(outputNode) {
   }, 750);
 }
 
-// THEME 3: Deep Sub Meditation Drone & Crystal Bowl
 function setupMeditationSynth(outputNode) {
   const now = audioCtx.currentTime;
-
-  // Heavy 60Hz and 90Hz calming grounded drone
   [55.0, 82.5, 110.0].forEach((freq, idx) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -239,7 +219,6 @@ function setupMeditationSynth(outputNode) {
     soundNodes.meditation.activeNodes.push(osc);
   });
 
-  // Crystal singing bowl overtone with binaural pulse
   const bowlOsc1 = audioCtx.createOscillator();
   const bowlOsc2 = audioCtx.createOscillator();
   const bowlGain = audioCtx.createGain();
@@ -247,7 +226,7 @@ function setupMeditationSynth(outputNode) {
   bowlOsc1.type = 'sine';
   bowlOsc2.type = 'sine';
   bowlOsc1.frequency.setValueAtTime(432.0, now);
-  bowlOsc2.frequency.setValueAtTime(436.5, now); // 4.5Hz Theta wave beat
+  bowlOsc2.frequency.setValueAtTime(436.5, now);
 
   bowlGain.gain.setValueAtTime(0.04, now);
   bowlOsc1.connect(bowlGain);
@@ -259,12 +238,9 @@ function setupMeditationSynth(outputNode) {
   soundNodes.meditation.activeNodes.push(bowlOsc1, bowlOsc2);
 }
 
-// THEME 4: Acoustic Zen Chimes & Pad
 function setupZenEngine(outputNode) {
   const now = audioCtx.currentTime;
-
-  // Warm soothing continuous background pad
-  const padFreqs = [174.61, 220.00, 261.63, 329.63]; // Fmaj7
+  const padFreqs = [174.61, 220.00, 261.63, 329.63];
   padFreqs.forEach((freq) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -283,11 +259,10 @@ function setupZenEngine(outputNode) {
     soundNodes.zen.activeNodes.push(osc);
   });
 
-  // Occasional peaceful bamboo wind chimes
   const chimeFreqs = [880.0, 987.77, 1174.66, 1318.51, 1567.98];
   soundNodes.zen.interval = setInterval(() => {
     if (!audioCtx || soundNodes.zen.gainNode.gain.value < 0.01) return;
-    if (Math.random() > 0.45) return; // natural irregularity
+    if (Math.random() > 0.45) return;
 
     const t = audioCtx.currentTime;
     const chimeFreq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
@@ -309,7 +284,7 @@ function setupZenEngine(outputNode) {
 }
 
 /* =========================================================================
-   3. INTELLIGENT CROSSFADING ENGINE
+   3. CROSSFADING ENGINE
    ========================================================================= */
 function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
   initAudioEngine();
@@ -329,7 +304,6 @@ function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
   currentThemeKey = newThemeKey;
   activeDetectedNoiseName = triggeredNoiseName || (newThemeKey === 'mute' ? 'なし' : '手動選択');
 
-  // Update gains across all 4 theme buses
   const themes = ['lofi', 'piano', 'meditation', 'zen'];
   themes.forEach(theme => {
     const bus = soundNodes[theme];
@@ -340,15 +314,12 @@ function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
     g.setValueAtTime(Math.max(0.0001, g.value), now);
 
     if (theme === newThemeKey) {
-      // Fade IN to full theme volume (1.0)
       g.exponentialRampToValueAtTime(1.0, now + targetDuration);
     } else {
-      // Fade OUT to silent threshold
       g.exponentialRampToValueAtTime(0.0001, now + targetDuration);
     }
   });
 
-  // Update custom uploaded audio elements if playing
   themes.forEach(theme => {
     if (soundNodes[theme].customAudio) {
       if (theme === newThemeKey) {
@@ -363,10 +334,8 @@ function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
     }
   });
 
-  // Update UI Themes & Glow
   updateThemeDisplayUI(newThemeKey);
 
-  // Handle Hold Timer (decay back to mute if not already mute)
   if (newThemeKey !== 'mute') {
     holdSecondsRemaining = holdDuration;
     updateHoldTimerUI();
@@ -378,9 +347,8 @@ function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
       if (holdSecondsRemaining <= 0) {
         clearInterval(holdTimer);
         holdTimer = null;
-        // Naturally fade out back to silence
         crossfadeToTheme('mute');
-        logTimelineEvent('マスキング完了 (フェードアウト)', 1.0, true);
+        logTimelineEvent('ホールド時間終了 (フェードアウト)', 1.0, true);
       }
     }, 1000);
   } else {
@@ -396,10 +364,10 @@ function crossfadeToTheme(newThemeKey, triggeredNoiseName = null) {
 function updateHoldTimerUI() {
   const el = document.getElementById('detectedHoldStatus');
   if (holdSecondsRemaining > 0) {
-    el.textContent = `維持: ${holdSecondsRemaining}s`;
+    el.textContent = `ホールド: ${holdSecondsRemaining}s`;
     el.className = 'text-[11px] font-mono text-teal-300 font-bold';
   } else {
-    el.textContent = '維持: -';
+    el.textContent = 'ホールド: -';
     el.className = 'text-[11px] font-mono text-slate-500';
   }
 }
@@ -414,7 +382,6 @@ function updateThemeDisplayUI(themeKey) {
   const badge = document.getElementById('activeThemeBadge');
   const orb1 = document.getElementById('ambientOrb1');
 
-  // Border and Avatar
   card.style.borderTopColor = meta.color;
   avatar.style.borderColor = meta.color;
   avatar.style.color = meta.color;
@@ -429,10 +396,8 @@ function updateThemeDisplayUI(themeKey) {
   badge.style.color = meta.badgeText;
   badge.style.borderColor = meta.color;
 
-  // Glow light shift
   orb1.style.backgroundColor = meta.color;
 
-  // Update Individual Theme Monitor Gain Bars
   const themes = ['lofi', 'piano', 'meditation', 'zen'];
   themes.forEach(t => {
     const bar = document.getElementById(`gainBar${capitalize(t)}`);
@@ -461,7 +426,7 @@ function capitalize(str) {
 }
 
 /* =========================================================================
-   4. AUDIO VISUALIZER & MIC ANALYZER
+   4. AUDIO VISUALIZER & FREQUENCY ANALYZER
    ========================================================================= */
 function setupVisualizer(stream) {
   initAudioEngine();
@@ -495,7 +460,6 @@ function setupVisualizer(stream) {
     let x = 0;
     let sum = 0;
 
-    // Draw frequency spectrum
     for (let i = 0; i < bufferLength; i++) {
       const val = dataArray[i];
       sum += val;
@@ -517,7 +481,6 @@ function setupVisualizer(stream) {
     const dbApprox = avg > 0 ? Math.round(20 * Math.log10(avg / 255)) : -60;
     document.getElementById('micDbDisplay').textContent = `${dbApprox} dBFS`;
 
-    // If no TM model loaded, fallback to frequency-band energy heuristic
     if (!isCustomModelLoaded && isListening) {
       analyzeFrequencyBands(dataArray, avg);
     }
@@ -525,51 +488,48 @@ function setupVisualizer(stream) {
   draw();
 }
 
-// Heuristic band energy simulator when TM model is not yet connected
 let bandTick = 0;
 function analyzeFrequencyBands(dataArray, overallAvg) {
   bandTick++;
-  if (bandTick % 8 !== 0) return; // rate limit
+  if (bandTick % 8 !== 0) return;
 
-  const normalized = Math.min(1.0, overallAvg / 140);
+  let lowEnergy = 0, midEnergy = 0, highEnergy = 0;
+  for (let i = 0; i < 8; i++) lowEnergy += dataArray[i];
+  for (let i = 8; i < 28; i++) midEnergy += dataArray[i];
+  for (let i = 28; i < 60; i++) highEnergy += dataArray[i];
+
+  lowEnergy /= 8;
+  midEnergy /= 20;
+  highEnergy /= 32;
+
+  // 常に最大エネルギーを持つバンド（またはバックグラウンド）を最大確率として選定
+  const maxEnergy = Math.max(overallAvg * 0.4, lowEnergy, midEnergy, highEnergy);
   const simulatedScores = [0, 0, 0, 0, 0];
 
-  if (normalized < (thresholdRatio * 0.35)) {
-    // Quiet
-    simulatedScores[0] = 0.95;
+  let topIdx = 0;
+  if (overallAvg < 15) {
+    topIdx = 0; // 静寂・バックグラウンド
+    simulatedScores[0] = 0.85;
+  } else if (maxEnergy === lowEnergy) {
+    topIdx = 1; // 電車・交通
+    simulatedScores[1] = 0.92;
+    simulatedScores[0] = 0.08;
+  } else if (maxEnergy === midEnergy) {
+    topIdx = 2; // タイピング・会話
+    simulatedScores[2] = 0.90;
+    simulatedScores[0] = 0.10;
   } else {
-    // Detect dominant frequency band:
-    // Low: 0-8 (Traffic/Train), Mid: 9-28 (Voice/Typing), High: 29-64 (Chimes/Rain/Click)
-    let lowEnergy = 0, midEnergy = 0, highEnergy = 0;
-    for (let i = 0; i < 8; i++) lowEnergy += dataArray[i];
-    for (let i = 8; i < 28; i++) midEnergy += dataArray[i];
-    for (let i = 28; i < 60; i++) highEnergy += dataArray[i];
+    topIdx = 4; // 雨・虫
+    simulatedScores[4] = 0.88;
+    simulatedScores[0] = 0.12;
+  }
 
-    lowEnergy /= 8;
-    midEnergy /= 20;
-    highEnergy /= 32;
+  const topClassName = recognizedClasses[topIdx];
+  const mappedTheme = classThemeMapping[topClassName] || 'lofi';
 
-    const maxEnergy = Math.max(lowEnergy, midEnergy, highEnergy);
-    const score = Math.min(0.98, (maxEnergy / 220) * 1.2);
-
-    if (maxEnergy === lowEnergy) {
-      simulatedScores[1] = score; // 電車・交通
-    } else if (maxEnergy === midEnergy) {
-      simulatedScores[2] = score; // タイピング・会話
-    } else {
-      simulatedScores[4] = score; // 雨・虫
-    }
-    simulatedScores[0] = Math.max(0.02, 1.0 - score);
-
-    // Check if exceeded sensitivity threshold
-    if (score >= thresholdRatio) {
-      const detectedClassIndex = simulatedScores.indexOf(score);
-      const detectedClassName = recognizedClasses[detectedClassIndex];
-      const mappedTheme = classThemeMapping[detectedClassName] || 'lofi';
-
-      crossfadeToTheme(mappedTheme, detectedClassName);
-      logTimelineEvent(`${detectedClassName} を検知 (周波数解析)`, score);
-    }
+  crossfadeToTheme(mappedTheme, topClassName);
+  if (topIdx !== 0) {
+    logTimelineEvent(`${topClassName} を検知 (最大確率)`, simulatedScores[topIdx]);
   }
 
   renderProbabilitiesUI(recognizedClasses, simulatedScores);
@@ -586,7 +546,7 @@ function stopVisualizer() {
 }
 
 /* =========================================================================
-   5. TEACHABLE MACHINE AUDIO MODEL INTEGRATION
+   5. RECOGNIZER & PROBABILITY ROUTING
    ========================================================================= */
 async function loadTeachableMachineModel(modelUrl) {
   const msg = document.getElementById('modelStatusMsg');
@@ -610,19 +570,18 @@ async function loadTeachableMachineModel(modelUrl) {
     recognizedClasses = recognizer.wordLabels();
     isCustomModelLoaded = true;
 
-    document.getElementById('modelIndicatorBadge').textContent = 'TM カスタムモデル稼働中';
+    document.getElementById('modelIndicatorBadge').textContent = 'カスタムモデル稼働中';
     document.getElementById('modelIndicatorBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
 
     msg.textContent = `✓ 接続成功: ${recognizedClasses.length} クラスを認識`;
     msg.className = 'text-xs font-mono text-emerald-400 block';
 
-    // Auto-assign smart default mapping for newly discovered classes
     rebuildClassMappingTable();
     renderProbabilitiesUI(recognizedClasses);
-    logTimelineEvent('Teachable Machineモデルを連携しました', 1.0, true);
+    logTimelineEvent('カスタム認識モデルが正常に接続されました', 1.0, true);
   } catch (err) {
     console.error(err);
-    msg.textContent = '❌ 接続失敗: 正しいTeachable Machine公開URLを入力してください';
+    msg.textContent = '❌ 接続失敗: 正しいモデルURLを入力してください';
     msg.className = 'text-xs font-mono text-rose-400 block';
   }
 }
@@ -632,14 +591,13 @@ function rebuildClassMappingTable() {
   container.innerHTML = '';
 
   recognizedClasses.forEach((className) => {
-    // Auto default matching guess if not mapped
     if (!classThemeMapping[className]) {
       const lower = className.toLowerCase();
       if (className === '_background_noise_' || lower.includes('quiet') || lower.includes('silence')) {
         classThemeMapping[className] = 'mute';
       } else if (lower.includes('rain') || lower.includes('water') || lower.includes('insect') || lower.includes('雨')) {
         classThemeMapping[className] = 'zen';
-      } else if (lower.includes('clatter') || lower.includes('impact') || lower.includes('clap') || lower.includes('衝撃') || lower.includes('雷')) {
+      } else if (lower.includes('clatter') || lower.includes('impact') || lower.includes('衝撃') || lower.includes('雷')) {
         classThemeMapping[className] = 'meditation';
       } else if (lower.includes('type') || lower.includes('talk') || lower.includes('voice') || lower.includes('会話')) {
         classThemeMapping[className] = 'piano';
@@ -651,7 +609,7 @@ function rebuildClassMappingTable() {
     const currentAssignedTheme = classThemeMapping[className];
 
     const row = document.createElement('div');
-    row.className = 'flex items-center justify-between p.2.5 rounded-xl bg-surface-900 border border-white/5 text-xs';
+    row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-surface-900 border border-white/5 text-xs';
     row.innerHTML = `
       <div class="flex items-center gap-2 truncate pr-2">
         <span class="w-2 h-2 rounded-full ${className === '_background_noise_' ? 'bg-slate-500' : 'bg-teal-400'} shrink-0"></span>
@@ -668,12 +626,11 @@ function rebuildClassMappingTable() {
     container.appendChild(row);
   });
 
-  // Bind change listeners
   container.querySelectorAll('.theme-select').forEach(select => {
     select.addEventListener('change', (e) => {
       const cls = e.target.getAttribute('data-class');
       classThemeMapping[cls] = e.target.value;
-      logTimelineEvent(`紐付け更新: [${cls}] → ${THEME_META[e.target.value].name}`, 1.0, true);
+      logTimelineEvent(`ルーティング更新: [${cls}] → ${THEME_META[e.target.value].name}`, 1.0, true);
     });
   });
 }
@@ -682,27 +639,38 @@ function renderProbabilitiesUI(classes, scores = null) {
   const list = document.getElementById('probabilitiesList');
   list.innerHTML = '';
 
+  // 常に最大確率を持つクラスを特定する
+  let maxScore = -1;
+  let maxIndex = 0;
+  if (scores) {
+    for (let i = 0; i < scores.length; i++) {
+      if (scores[i] > maxScore) {
+        maxScore = scores[i];
+        maxIndex = i;
+      }
+    }
+  }
+
   classes.forEach((className, idx) => {
     const score = scores ? scores[idx] : 0;
     const percent = Math.round(score * 100);
     const mappedTheme = classThemeMapping[className] || 'mute';
-    const isTriggered = (score >= thresholdRatio) && (mappedTheme !== 'mute');
+    const isTopProbability = (scores && idx === maxIndex);
     const meta = THEME_META[mappedTheme];
 
     const row = document.createElement('div');
     row.className = 'space-y-1';
     row.innerHTML = `
       <div class="flex justify-between items-center text-xs">
-        <span class="flex items-center gap-1.5 truncate ${isTriggered ? 'text-white font-bold' : 'text-slate-300'}">
-          <span class="w-2 h-2 rounded-full ${isTriggered ? 'animate-ping' : ''}" style="background-color: ${meta.color};"></span>
+        <span class="flex items-center gap-1.5 truncate ${isTopProbability ? 'text-white font-bold' : 'text-slate-300'}">
+          <span class="w-2 h-2 rounded-full ${isTopProbability ? 'animate-ping' : ''}" style="background-color: ${meta.color};"></span>
           <span class="truncate">${className}</span>
           <span class="text-[10px] text-slate-400 font-mono">(${meta.name.split(' ')[0]})</span>
         </span>
-        <span class="font-mono text-xs ${isTriggered ? 'font-bold' : 'text-slate-400'}" style="color: ${isTriggered ? meta.color : ''}">${percent}%</span>
+        <span class="font-mono text-xs ${isTopProbability ? 'font-bold' : 'text-slate-400'}" style="color: ${isTopProbability ? meta.color : ''}">${percent}%</span>
       </div>
       <div class="h-2 w-full bg-surface-900 rounded-full overflow-hidden border border-white/5 relative">
         <div class="h-full rounded-full transition-all duration-150" style="width: ${percent}%; background-color: ${meta.color};"></div>
-        <div class="absolute top-0 bottom-0 border-r border-amber-400/60 z-10" style="left: ${thresholdRatio * 100}%;" title="しきい値"></div>
       </div>
     `;
     list.appendChild(row);
@@ -719,27 +687,28 @@ async function startMicListening() {
     if (isCustomModelLoaded && recognizer) {
       recognizer.listen(result => {
         const scores = Array.from(result.scores);
-        renderProbabilitiesUI(recognizedClasses, scores);
 
-        // Find highest scored non-background class
-        let topScore = 0;
-        let topClass = '';
+        // 閾値フィルタなし：常に確率が最大のクラスをダイレクトに取得して鳴らす
+        let maxScore = -1;
+        let topClass = recognizedClasses[0];
         for (let i = 0; i < scores.length; i++) {
-          const cls = recognizedClasses[i];
-          if (cls !== '_background_noise_' && scores[i] > topScore) {
-            topScore = scores[i];
-            topClass = cls;
+          if (scores[i] > maxScore) {
+            maxScore = scores[i];
+            topClass = recognizedClasses[i];
           }
         }
 
-        if (topScore >= thresholdRatio) {
-          const themeToPlay = classThemeMapping[topClass] || 'lofi';
-          crossfadeToTheme(themeToPlay, topClass);
-          logTimelineEvent(`${topClass} をAI検知`, topScore);
+        renderProbabilitiesUI(recognizedClasses, scores);
+
+        const themeToPlay = classThemeMapping[topClass] || 'mute';
+        crossfadeToTheme(themeToPlay, topClass);
+
+        if (topClass !== '_background_noise_') {
+          logTimelineEvent(`${topClass} 検知 (最大確率)`, maxScore);
         }
       }, {
         includeSpectrogram: false,
-        probabilityThreshold: 0.05,
+        probabilityThreshold: 0.01,
         overlapFactor: 0.50
       });
     }
@@ -748,7 +717,7 @@ async function startMicListening() {
     updateListeningUI(true);
   } catch (err) {
     console.error('Mic access error:', err);
-    alert('マイクへのアクセスが許可されませんでした。設定からマイク権限を許可してください。');
+    alert('マイクへのアクセスが許可されませんでした。');
   }
 }
 
@@ -820,15 +789,13 @@ function logTimelineEvent(title, confidence = 1.0, isSys = false) {
 }
 
 /* =========================================================================
-   6. DOM EVENT LISTENERS & INITIALIZATION
+   6. EVENT LISTENERS & INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
-  // Rebuild Default Mapping UI and bars
   rebuildClassMappingTable();
   renderProbabilitiesUI(recognizedClasses);
   updateThemeDisplayUI('mute');
 
-  // Microphone Toggle
   document.getElementById('toggleListenBtn').addEventListener('click', () => {
     if (!isListening) {
       startMicListening();
@@ -837,35 +804,32 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Quick Simulation Buttons (Instant Testing)
   document.getElementById('simTrainBtn').addEventListener('click', () => {
     crossfadeToTheme('lofi', '電車・重低音 (シミュレーション)');
-    logTimelineEvent('電車・重低音をシミュレート検知', 0.94);
+    logTimelineEvent('電車・重低音をシミュレート選択', 0.94);
   });
   document.getElementById('simTypingBtn').addEventListener('click', () => {
     crossfadeToTheme('piano', 'タイピング・会話 (シミュレーション)');
-    logTimelineEvent('タイピング・会話をシミュレート検知', 0.91);
+    logTimelineEvent('タイピング・会話をシミュレート選択', 0.91);
   });
   document.getElementById('simImpactBtn').addEventListener('click', () => {
     crossfadeToTheme('meditation', '衝撃音・雷 (シミュレーション)');
-    logTimelineEvent('突発衝撃音をシミュレート検知', 0.96);
+    logTimelineEvent('突発衝撃音をシミュレート選択', 0.96);
   });
   document.getElementById('simNatureBtn').addEventListener('click', () => {
     crossfadeToTheme('zen', '雨・水流・虫 (シミュレーション)');
-    logTimelineEvent('雨・流水音をシミュレート検知', 0.88);
+    logTimelineEvent('雨・流水音をシミュレート選択', 0.88);
   });
   document.getElementById('simQuietBtn').addEventListener('click', () => {
     crossfadeToTheme('mute');
     logTimelineEvent('静寂をシミュレート (ミュートへフェード)', 1.0, true);
   });
 
-  // Model Loading URL
   document.getElementById('loadModelBtn').addEventListener('click', () => {
     const url = document.getElementById('modelUrlInput').value.trim();
     if (url) loadTeachableMachineModel(url);
   });
 
-  // Reset Mapping
   document.getElementById('resetMappingBtn').addEventListener('click', () => {
     classThemeMapping = {
       '_background_noise_': 'mute',
@@ -875,15 +839,7 @@ window.addEventListener('DOMContentLoaded', () => {
       '雨・水流・虫': 'zen'
     };
     rebuildClassMappingTable();
-    logTimelineEvent('マッピングを初期値にリセットしました', 1.0, true);
-  });
-
-  // Sliders
-  const thresholdSlider = document.getElementById('thresholdSlider');
-  thresholdSlider.addEventListener('input', (e) => {
-    thresholdRatio = parseInt(e.target.value, 10) / 100;
-    document.getElementById('thresholdValText').textContent = `${e.target.value}%`;
-    renderProbabilitiesUI(recognizedClasses);
+    logTimelineEvent('ルーティングを初期値にリセットしました', 1.0, true);
   });
 
   const fadeSpeedSlider = document.getElementById('fadeSpeedSlider');
@@ -907,7 +863,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Preset vs Custom Audio File Toggle
   const modePresetSynthBtn = document.getElementById('modePresetSynthBtn');
   const modeCustomFilesBtn = document.getElementById('modeCustomFilesBtn');
   const customSection = document.getElementById('customFilesSection');
@@ -924,7 +879,6 @@ window.addEventListener('DOMContentLoaded', () => {
     customSection.classList.remove('hidden');
   });
 
-  // Custom Audio File Inputs
   document.querySelectorAll('.custom-file-input').forEach(input => {
     input.addEventListener('change', (e) => {
       const themeKey = e.target.getAttribute('data-theme');
@@ -940,18 +894,16 @@ window.addEventListener('DOMContentLoaded', () => {
         sourceNode.connect(soundNodes[themeKey].gainNode);
         soundNodes[themeKey].customAudio = audioElem;
 
-        logTimelineEvent(`[${THEME_META[themeKey].name}] に自作音源を登録: ${file.name}`, 1.0, true);
+        logTimelineEvent(`[${THEME_META[themeKey].name}] カスタム音源読込: ${file.name}`, 1.0, true);
       }
     });
   });
 
-  // Guide Modal
   const modal = document.getElementById('guideModal');
   document.getElementById('guideBtn').addEventListener('click', () => modal.classList.remove('hidden'));
   document.getElementById('closeGuideBtn').addEventListener('click', () => modal.classList.add('hidden'));
   document.getElementById('closeGuideBottomBtn').addEventListener('click', () => modal.classList.add('hidden'));
 
-  // Clear Log
   document.getElementById('clearLogBtn').addEventListener('click', () => {
     document.getElementById('eventLogList').innerHTML = '<div class="text-slate-500 py-1">ログを消去しました。</div>';
   });

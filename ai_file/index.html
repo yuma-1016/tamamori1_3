@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NoiseMask AI - Multi-Theme Dynamic Soundscape</title>
+  <title>Acoustic Masking Engine - Dynamic Soundscape</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- TensorFlow.js & Speech Commands for Teachable Machine Audio -->
+  <!-- TensorFlow.js & Speech Commands -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
   <!-- Phosphor Icons -->
@@ -31,12 +31,11 @@
       }
     }
   </script>
-  <!-- 分離したCSSファイルの読み込み -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white relative overflow-x-hidden">
 
-  <!-- Ambient Dynamic Background Glow that shifts with active theme -->
+  <!-- Ambient Dynamic Background Glow -->
   <div class="fixed inset-0 pointer-events-none -z-10 transition-colors duration-1000" id="bgAmbientLight">
     <div id="ambientOrb1" class="absolute -top-32 left-1/4 w-[32rem] h-[32rem] bg-amber-500/10 rounded-full blur-[140px] transition-all duration-1000"></div>
     <div id="ambientOrb2" class="absolute top-1/2 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-[150px] transition-all duration-1000"></div>
@@ -52,17 +51,17 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">NoiseMask AI</span>
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Acoustic Shield</span>
             <span id="activeThemeBadge" class="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/10">Theme: Muted</span>
           </div>
-          <span class="text-[10px] text-slate-400 block -mt-0.5">雑音感知型 マルチテーマBGMマスキングエンジン</span>
+          <span class="text-[10px] text-slate-400 block -mt-0.5">環境音自動適応型 ダイナミックサウンドマスキングエンジン</span>
         </div>
       </div>
 
       <div class="flex items-center space-x-3">
         <button id="guideBtn" class="text-xs font-medium text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 bg-surface-900/60">
           <i class="ph ph-sliders-horizontal text-sm"></i>
-          <span>設定ガイド</span>
+          <span>セットアップガイド</span>
         </button>
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-900 border border-white/10 text-xs font-mono">
           <span id="engineBadgeDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
@@ -74,10 +73,10 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- LEFT COLUMN: Live Detection & Dynamic Theme Visualizer (7 Cols) -->
+    <!-- LEFT COLUMN -->
     <div class="lg:col-span-7 flex flex-col gap-6">
 
-      <!-- Dynamic Theme Showcase & Master Control Card -->
+      <!-- Master Control Card -->
       <div class="glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl border-t-2" id="mainStatusCard" style="border-top-color: #64748b;">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
           <div class="flex items-center gap-3.5">
@@ -93,63 +92,58 @@
                 静穏・ミュート状態
               </div>
               <div id="currentThemeDesc" class="text-xs text-slate-400">
-                雑音を感知すると、その種類に最適化されたリラクゼーションBGMへ滑らかに遷移します。
+                環境音をリアルタイム解析し、最適なリラクゼーションBGMへ滑らかにクロスフェードします。
               </div>
             </div>
           </div>
 
-          <!-- Master Microphone Listen Button -->
           <button id="toggleListenBtn" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold shadow-lg shadow-teal-500/25 active:scale-95 transition-all flex items-center gap-2">
             <i id="listenBtnIcon" class="ph-bold ph-play"></i>
             <span id="listenBtnText">監視を開始する</span>
           </button>
         </div>
 
-        <!-- 4 BGM Themes Status Bar (Equalizer crossfade monitors) -->
+        <!-- 4 BGM Themes Status Bar -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
-          <!-- Theme 1: Lo-Fi Chill -->
           <div id="cardThemeLoFi" class="p-3 rounded-xl bg-surface-900/90 border border-white/5 transition-all duration-300">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] font-semibold text-amber-400 flex items-center gap-1"><i class="ph ph-coffee"></i> Lo-Fi Chill</span>
               <span id="gainTextLoFi" class="text-[10px] font-mono text-slate-400">0%</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate mb-1.5">電車・交通・重低音</div>
+            <div class="text-[10px] text-slate-400 truncate mb-1.5">電車・交通・低音</div>
             <div class="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
               <div id="gainBarLoFi" class="h-full bg-amber-400 transition-all duration-200" style="width: 0%;"></div>
             </div>
           </div>
 
-          <!-- Theme 2: Ambient Piano -->
           <div id="cardThemePiano" class="p-3 rounded-xl bg-surface-900/90 border border-white/5 transition-all duration-300">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] font-semibold text-purple-400 flex items-center gap-1"><i class="ph ph-keyboard"></i> Soft Piano</span>
               <span id="gainTextPiano" class="text-[10px] font-mono text-slate-400">0%</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate mb-1.5">タイピング・話し声・人混み</div>
+            <div class="text-[10px] text-slate-400 truncate mb-1.5">タイピング・会話</div>
             <div class="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
               <div id="gainBarPiano" class="h-full bg-purple-400 transition-all duration-200" style="width: 0%;"></div>
             </div>
           </div>
 
-          <!-- Theme 3: Deep Meditation -->
           <div id="cardThemeMeditation" class="p-3 rounded-xl bg-surface-900/90 border border-white/5 transition-all duration-300">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] font-semibold text-cyan-400 flex items-center gap-1"><i class="ph ph-sparkle"></i> Deep Sub Drone</span>
               <span id="gainTextMeditation" class="text-[10px] font-mono text-slate-400">0%</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate mb-1.5">突発衝撃音・雷・金属</div>
+            <div class="text-[10px] text-slate-400 truncate mb-1.5">衝撃音・雷・金属</div>
             <div class="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
               <div id="gainBarMeditation" class="h-full bg-cyan-400 transition-all duration-200" style="width: 0%;"></div>
             </div>
           </div>
 
-          <!-- Theme 4: Zen Chimes & Pad -->
           <div id="cardThemeZen" class="p-3 rounded-xl bg-surface-900/90 border border-white/5 transition-all duration-300">
             <div class="flex items-center justify-between mb-1">
               <span class="text-[11px] font-semibold text-emerald-400 flex items-center gap-1"><i class="ph ph-leaf"></i> Zen Chimes</span>
               <span id="gainTextZen" class="text-[10px] font-mono text-slate-400">0%</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate mb-1.5">雨・流水・セミ・虫の声</div>
+            <div class="text-[10px] text-slate-400 truncate mb-1.5">雨・流水・虫の声</div>
             <div class="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
               <div id="gainBarZen" class="h-full bg-emerald-400 transition-all duration-200" style="width: 0%;"></div>
             </div>
@@ -159,7 +153,7 @@
         <!-- Spectrum Waveform Visualizer Canvas -->
         <div class="space-y-2">
           <div class="flex justify-between items-center text-xs font-mono text-slate-400">
-            <span class="flex items-center gap-1.5"><i class="ph ph-waves"></i> 入力リアルタイム・アナライザー</span>
+            <span class="flex items-center gap-1.5"><i class="ph ph-waves"></i> リアルタイム・周波数アナライザー</span>
             <div class="flex items-center gap-3">
               <span id="detectedHoldStatus" class="text-[11px] text-slate-400">維持: -</span>
               <span id="micDbDisplay">-∞ dB</span>
@@ -168,23 +162,23 @@
           <div class="h-28 w-full bg-surface-900 rounded-xl overflow-hidden border border-white/5 relative">
             <canvas id="visualizerCanvas" class="w-full h-full block"></canvas>
             <div id="visualizerOverlay" class="absolute inset-0 flex items-center justify-center text-xs text-slate-500 font-mono pointer-events-none">
-              マイク待機中 - 「監視を開始する」を押すか、下のテストボタンで試聴できます
+              マイク待機中 - 「監視を開始する」または下のテストボタンで試聴できます
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Sound Simulation Triggers Card (Instant Testing Without External Audio) -->
+      <!-- Quick Sound Simulation Triggers -->
       <div class="glass-panel rounded-2xl p-5 shadow-xl">
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-semibold text-sm text-white flex items-center gap-2">
             <i class="ph-duotone ph-flask text-teal-400"></i>
-            雑音エミュレーション (即座に切り替えテスト)
+            サウンドシミュレーション (即時テスト)
           </h3>
           <span class="text-[10px] font-mono text-slate-400">クリックで各テーマへクロスフェード</span>
         </div>
         <p class="text-xs text-slate-400 mb-3.5">
-          Teachable Machineのモデルを準備中の方でも、ワンクリックで各雑音検知時のBGM切り替え動作を確認できます。
+          外部マイク音源を使わずに、ワンクリックで各環境音に対応するBGMへの切り替え動作を確認できます。
         </p>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -218,19 +212,19 @@
             <i class="ph ph-speaker-slash"></i>
             <span>静寂シミュレート (ミュートへフェードアウト)</span>
           </button>
-          <span class="text-[10px] text-slate-500 font-mono">リアルタイム周波数マッチング有効</span>
+          <span class="text-[10px] text-slate-500 font-mono">最高確率クラスを常時追従</span>
         </div>
       </div>
 
-      <!-- Real-Time AI Probability List Card -->
+      <!-- Real-Time Probability List Card -->
       <div class="glass-panel rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-semibold text-sm text-white flex items-center gap-2">
             <i class="ph-duotone ph-chart-bar text-teal-400"></i>
-            モデル推論確率 (Teachable Machine / リアルタイム)
+            認識確率分布 (最大確率クラスを自動選択)
           </h3>
           <span id="modelIndicatorBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-            内部周波数アナライザー
+            周波数アナライザー稼働中
           </span>
         </div>
         <div id="probabilitiesList" class="space-y-3 flex-1 min-h-[140px] flex flex-col justify-center">
@@ -240,21 +234,21 @@
 
     </div>
 
-    <!-- RIGHT COLUMN: Settings, Mapping Matrix, Model Loading (5 Cols) -->
+    <!-- RIGHT COLUMN -->
     <div class="lg:col-span-5 flex flex-col gap-6">
 
-      <!-- Teachable Machine Model URL & Setup -->
+      <!-- Model URL & Setup -->
       <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
         <h3 class="font-semibold text-base text-white flex items-center gap-2">
-          <i class="ph-duotone ph-brain text-teal-400"></i>
-          1. AI音声モデルの読み込み
+          <i class="ph-duotone ph-cpu text-teal-400"></i>
+          1. 認識モデルの接続 (オプション)
         </h3>
         <p class="text-xs text-slate-400">
-          Google Teachable MachineでエクスポートしたURLを入力すると、モデルの推論クラスが自動的に反映されます。
+          カスタム音声モデルのURLを入力すると、独自の分類クラスを自動認識してルーティングに適用します。
         </p>
 
         <div>
-          <label class="block text-xs font-mono text-slate-300 mb-1">Teachable Machine Model URL:</label>
+          <label class="block text-xs font-mono text-slate-300 mb-1">Model Endpoint URL:</label>
           <div class="flex gap-2">
             <input id="modelUrlInput" type="url" placeholder="https://teachablemachine.withgoogle.com/models/XXXXXX/" class="w-full bg-surface-900 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-400 font-mono transition-all">
             <button id="loadModelBtn" class="px-4 py-2 bg-surface-800 hover:bg-surface-700 text-xs font-semibold rounded-xl border border-white/10 text-white shrink-0 active:scale-95 transition-all">
@@ -271,41 +265,37 @@
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-base text-white flex items-center gap-2">
             <i class="ph-duotone ph-git-merge text-teal-400"></i>
-            2. 雑音とBGMの紐付け (Mapping)
+            2. 音響クラスとBGMのルーティング
           </h3>
           <button id="resetMappingBtn" class="text-[11px] font-mono text-slate-400 hover:text-white">標準に戻す</button>
         </div>
         <p class="text-xs text-slate-400">
-          検知された雑音クラスごとに、鳴らしたいBGMテーマを選択してください。
+          検出された音響クラスに対して、最も確率が優勢になった際に鳴らすBGMテーマを指定します。
         </p>
 
-        <!-- Mapping Container Table -->
-        <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1" id="mappingContainer">
-          <!-- Populated with dropdowns for each recognized class -->
-        </div>
+        <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1" id="mappingContainer"></div>
       </div>
 
-      <!-- Sound Engine Source Controls (Synthesis or Custom Upload) -->
+      <!-- Sound Engine Source Controls -->
       <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
         <h3 class="font-semibold text-base text-white flex items-center gap-2">
           <i class="ph-duotone ph-sliders text-teal-400"></i>
-          3. 音源カスタマイズ (Sound Mode)
+          3. 音源ソース設定 (Sound Mode)
         </h3>
         
         <div class="grid grid-cols-2 gap-2">
           <button id="modePresetSynthBtn" class="p-2.5 rounded-xl border border-teal-500/40 bg-teal-500/10 text-white text-xs font-medium flex items-center justify-center gap-2 transition-all">
             <i class="ph-bold ph-waveform"></i>
-            内蔵生成シンセ (自動)
+            内蔵ジェネレーター (自動)
           </button>
           <button id="modeCustomFilesBtn" class="p-2.5 rounded-xl border border-white/10 bg-surface-900/60 hover:bg-surface-800 text-slate-400 text-xs font-medium flex items-center justify-center gap-2 transition-all">
             <i class="ph-bold ph-upload-simple"></i>
-            独自音源ファイル (MP3)
+            オーディオファイル (MP3)
           </button>
         </div>
 
-        <!-- Custom Audio Upload Section (Hidden when preset is active) -->
         <div id="customFilesSection" class="hidden space-y-3 pt-2 text-xs">
-          <p class="text-[11px] text-slate-400">各テーマ用のMP3やWAVファイルを個別にセットできます（ループ再生対応）：</p>
+          <p class="text-[11px] text-slate-400">各テーマ用のループ音源ファイル（MP3/WAV）を個別にセットできます：</p>
           <div class="space-y-2">
             <div class="flex items-center justify-between p-2 rounded-lg bg-surface-900 border border-white/5">
               <span class="text-amber-400 font-medium">1. Lo-Fi Chill:</span>
@@ -327,44 +317,31 @@
         </div>
       </div>
 
-      <!-- Sensitivity & Crossfade Sliders -->
+      <!-- Crossfade & Hold Settings -->
       <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
         <h3 class="font-semibold text-base text-white flex items-center gap-2">
           <i class="ph-duotone ph-faders text-teal-400"></i>
-          4. 感度 & クロスフェード調整
+          4. 遷移・ホールド調整
         </h3>
 
-        <!-- Threshold -->
-        <div>
-          <div class="flex justify-between items-center text-xs mb-1">
-            <span class="text-slate-300 font-medium">検知しきい値 (Sensitivity)</span>
-            <span id="thresholdValText" class="font-mono text-teal-400 font-bold">70%</span>
-          </div>
-          <input id="thresholdSlider" type="range" min="30" max="95" value="70" class="w-full accent-teal-400 bg-surface-900 rounded-lg h-2 cursor-pointer">
-          <span class="text-[11px] text-slate-500 block mt-0.5">確率または音量エネルギーがこの値を超えるとトリガー</span>
-        </div>
-
-        <!-- Crossfade Duration -->
         <div>
           <div class="flex justify-between items-center text-xs mb-1">
             <span class="text-slate-300 font-medium">クロスフェード推移時間 (Transition Speed)</span>
             <span id="fadeSpeedValText" class="font-mono text-teal-400 font-bold">2.5 秒</span>
           </div>
           <input id="fadeSpeedSlider" type="range" min="0.5" max="8.0" step="0.5" value="2.5" class="w-full accent-teal-400 bg-surface-900 rounded-lg h-2 cursor-pointer">
-          <span class="text-[11px] text-slate-500 block mt-0.5">前の曲から次のテーマへ滑らかに移り変わる時間</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">テーマから次のテーマへ滑らかに移り変わる時間</span>
         </div>
 
-        <!-- Masking Hold Duration -->
         <div>
           <div class="flex justify-between items-center text-xs mb-1">
             <span class="text-slate-300 font-medium">マスキング維持時間 (Hold Duration)</span>
             <span id="holdDurationValText" class="font-mono text-teal-400 font-bold">6 秒</span>
           </div>
           <input id="holdDurationSlider" type="range" min="2" max="30" value="6" class="w-full accent-teal-400 bg-surface-900 rounded-lg h-2 cursor-pointer">
-          <span class="text-[11px] text-slate-500 block mt-0.5">音が止んだ後、急に途切れないよう再生を持続する秒数</span>
+          <span class="text-[11px] text-slate-500 block mt-0.5">音が静まった後、急に途切れないよう再生を持続する秒数</span>
         </div>
 
-        <!-- Master Volume -->
         <div>
           <div class="flex justify-between items-center text-xs mb-1">
             <span class="text-slate-300 font-medium">マスター最大音量 (Master Volume)</span>
@@ -381,24 +358,24 @@
       <div class="flex justify-between items-center mb-3">
         <h4 class="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
           <i class="ph ph-clock-counter-clockwise"></i>
-          雑音検知 & テーマ遷移タイムライン
+          サウンド遷移ログ & タイムライン
         </h4>
         <button id="clearLogBtn" class="text-[11px] text-slate-400 hover:text-slate-200">ログをクリア</button>
       </div>
       <div id="eventLogList" class="space-y-1.5 max-h-32 overflow-y-auto font-mono text-xs text-slate-300">
-        <div class="text-slate-500 py-1">システム待機中。マイク監視を開始するか、テストボタンをクリックしてください。</div>
+        <div class="text-slate-500 py-1">システム待機中。監視を開始するか、テストボタンをクリックしてください。</div>
       </div>
     </div>
 
   </main>
 
-  <!-- Model Setup Guide Modal -->
+  <!-- Setup Guide Modal -->
   <div id="guideModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="glass-panel max-w-xl w-full rounded-2xl p-6 border border-white/10 shadow-2xl space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
           <i class="ph-duotone ph-book-open text-teal-400"></i>
-          Teachable Machine × マルチBGM 連携ガイド
+          ダイナミック・サウンドマスキング ガイド
         </h3>
         <button id="closeGuideBtn" class="w-8 h-8 rounded-lg bg-surface-800 text-slate-400 hover:text-white flex items-center justify-center">
           <i class="ph-bold ph-x"></i>
@@ -406,10 +383,9 @@
       </div>
 
       <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
-        <p><strong>1. 音声モデルの作成:</strong> Teachable Machine (Audio Project) で、<code>_background_noise_</code> と、検知したい雑音クラス（例: <code>Train</code>, <code>Typing</code>, <code>Rain</code> など）を作成して学習させます。</p>
-        <p><strong>2. エクスポートとURL取得:</strong> 「Export Model」から「Upload my model」を選び、発行されたURLを本アプリ右上の入力枠に貼り付けて「接続」を押します。</p>
-        <p><strong>3. クラスの自動紐付け:</strong> モデルが読み込まれると、本アプリの「2. 雑音とBGMの紐付け」にクラス一覧が並びます。各クラスに対して鳴らしたいBGM（Lo-Fi, Piano, Meditation, Zen）を指定してください。</p>
-        <p><strong>4. スムーズなマスキング:</strong> AIが雑音を検出すると、自動的にそのテーマへイコライザーが自然にクロスフェードします。雑音が収まると指定秒数後にゆっくりフェードアウトします。</p>
+        <p><strong>1. 基本動作:</strong> マイクからの入力音をリアルタイムで分析し、その瞬間に最も確率（スコア）が高い音響クラスに紐づいたBGMテーマを自動再生します。</p>
+        <p><strong>2. 確率最大優先ルーティング:</strong> 常に最も確率が高いクラスの音源が優先して選択されます。背景雑音（Quiet / Noise）がトップの場合は静寂（ミュート）にフェードアウトします。</p>
+        <p><strong>3. カスタムモデル連携:</strong> 音声認識モデルのURLを接続することで、独自の分類クラスを自動認識させることができます。</p>
       </div>
 
       <div class="text-right pt-2">
@@ -420,7 +396,6 @@
     </div>
   </div>
 
-  <!-- 分離したJSファイルの読み込み -->
   <script src="script.js"></script>
 </body>
 </html>
