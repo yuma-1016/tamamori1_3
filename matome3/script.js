@@ -313,7 +313,7 @@ async function startListening() {
         
         // バックグラウンドノイズを無視して、低・中・高の中で一番スコアが高いものを探す
         for (let i = 0; i < scores.length; i++) {
-          if (!labels[i].includes('バックグラウンド') && scores[i] > topScore) {
+          if (scores[i] > topScore) {
             topScore = scores[i];
             topClass = labels[i];
           }
@@ -333,6 +333,9 @@ async function startListening() {
             if (topClass.includes('低音')) targetTheme = 'meditation';
             else if (topClass.includes('中音')) targetTheme = 'piano';
             else if (topClass.includes('高音')) targetTheme = 'zen';
+            else{
+              targetTheme = 'mute';
+            }
 
             if (currentThemeKey !== targetTheme) {
               crossfadeToTheme(targetTheme);
