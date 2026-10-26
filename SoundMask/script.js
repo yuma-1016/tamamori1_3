@@ -431,4 +431,16 @@ window.addEventListener('DOMContentLoaded', () => {
       tooltip.classList.add('hidden');
     }
   });
+
+  document.getElementById('previewLowBtn').addEventListener('click', () => {
+    crossfadeToTheme('meditation'); // 低音カバーを再生
+  });
+
+  document.getElementById('previewMidBtn').addEventListener('click', () => {
+    crossfadeToTheme('piano');      // 中音カバーを再生
+  });
+
+  document.getElementById('previewHighBtn').addEventListener('click', () => {
+    crossfadeToTheme('zen');        // 高音カバーを再生
+  });
 });
